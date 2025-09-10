@@ -30,8 +30,8 @@ export const getConditionInfoTool = ai.defineTool(
   {
     name: 'getConditionInfoTool',
     description: 'Searches a local knowledge base for health conditions based on symptoms. Returns information about diseases, medications, diets, workouts, and precautions.',
-    input: { schema: ConditionInfoInputSchema },
-    output: { schema: ConditionInfoOutputSchema },
+    inputSchema: ConditionInfoInputSchema,
+    outputSchema: ConditionInfoOutputSchema,
   },
   async (input) => {
     const searchResults = await searchHealthData(input.symptoms);
