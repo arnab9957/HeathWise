@@ -5,38 +5,27 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AlertCircle, Pill, Salad, Stethoscope } from "lucide-react"
+import ReactMarkdown from "react-markdown"
 
-type ResultsDisplayProps = {
-  results: AnalysisResult;
-};
-
-const DietChartDisplay = ({ dietChart }: { dietChart: string }) => {
-  const lines = dietChart.split('\n').filter(line => line.trim() !== '');
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
+const MarkdownDisplay = ({ content }: { content: string }) => {
   return (
-    <div className="space-y-6">
-      {lines.map((line, index) => {
-        const isDay = days.some(day => line.trim().startsWith(day));
-        if (isDay) {
-          return <h3 key={index} className="font-bold font-headline text-xl text-primary mt-6 first:mt-0 border-b pb-2">{line}</h3>;
-        }
-        const parts = line.split(':');
-        if (parts.length > 1) {
-            return (
-                <p key={index}>
-                    <span className="font-semibold">{parts[0]}:</span>
-                    {parts.slice(1).join(':')}
-                </p>
-            )
-        }
-        return <p key={index}>{line}</p>;
-      })}
-    </div>
+    <ReactMarkdown
+      className="prose prose-sm dark:prose-invert max-w-none"
+      components={{
+        h3: ({ node, ...props }) => <h3 className="font-bold font-headline text-xl text-primary mt-6 first:mt-0 border-b pb-2" {...props} />,
+        p: ({ node, ...props }) => <p className="mb-2" {...props} />,
+        ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-2" {...props} />,
+        ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-2" {...props} />,
+        li: ({ node, ...props }) => <li className="pl-2" {...props} />,
+        strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
+      }}
+    >
+      {content}
+    </ReactMarkdown>
   );
 };
 
-export function ResultsDisplay({ results }: ResultsDisplayProps) {
+export function ResultsDisplay({ results }: AnalysisResult) {
   return (
     <Card className="shadow-lg animate-in fade-in-0 duration-500">
       <CardHeader>
@@ -67,7 +56,7 @@ export function ResultsDisplay({ results }: ResultsDisplayProps) {
           <TabsContent value="medication" className="mt-6 space-y-4">
             <div>
               <h3 className="text-lg font-semibold">Suggested Medications</h3>
-              <p className="whitespace-pre-line">{results.medications.suggestions}</p>
+              <MarkdownDisplay content={results.medications.suggestions} />
             </div>
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start text-amber-800">
                 <AlertCircle className="w-5 h-5 mr-3 mt-1 shrink-0" />
@@ -80,7 +69,7 @@ export function ResultsDisplay({ results }: ResultsDisplayProps) {
 
           <TabsContent value="diet" className="mt-6">
             <h3 className="text-lg font-semibold mb-4">Your Weekly Diet Plan</h3>
-            <DietChartDisplay dietChart={results.dietChart} />
+            <MarkdownDisplay content={results.dietChart} />
           </TabsContent>
         </Tabs>
       </CardContent>
