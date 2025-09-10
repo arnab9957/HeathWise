@@ -25,7 +25,7 @@ const MarkdownDisplay = ({ content }: { content: string }) => {
   );
 };
 
-export function ResultsDisplay({ results }: AnalysisResult) {
+export function ResultsDisplay({ results }: { results: AnalysisResult }) {
   return (
     <Card className="shadow-lg animate-in fade-in-0 duration-500">
       <CardHeader>
