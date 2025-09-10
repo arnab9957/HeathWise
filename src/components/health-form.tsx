@@ -79,7 +79,7 @@ export function HealthForm({ onSubmit, isLoading }: HealthFormProps) {
                   <FormItem>
                     <FormLabel>Age</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="30" {...field} />
+                      <Input type="number" placeholder="30" {...field} value={String(field.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -113,7 +113,7 @@ export function HealthForm({ onSubmit, isLoading }: HealthFormProps) {
                   <FormItem>
                     <FormLabel>Weight (kg)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="70" {...field} />
+                      <Input type="number" placeholder="70" {...field} value={String(field.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -126,7 +126,7 @@ export function HealthForm({ onSubmit, isLoading }: HealthFormProps) {
                   <FormItem>
                     <FormLabel>Height (cm)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="175" {...field} />
+                      <Input type="number" placeholder="175" {...field} value={String(field.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
