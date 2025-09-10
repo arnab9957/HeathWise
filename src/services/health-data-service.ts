@@ -22,6 +22,30 @@ type HealthDataRow = {
 let healthDataCache: HealthDataRow[] | null = null;
 
 /**
+ * Parses a single line of CSV.
+ * Handles quoted fields that may contain commas.
+ */
+function parseCsvLine(line: string): string[] {
+    const result: string[] = [];
+    let currentField = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(currentField.trim());
+            currentField = '';
+        } else {
+            currentField += char;
+        }
+    }
+    result.push(currentField.trim());
+    return result;
+}
+
+
+/**
  * Loads and parses the dataset from the CSV file.
  * Caches the data in memory to avoid repeated file reads.
  * @returns {Promise<HealthDataRow[]>} A promise that resolves to an array of data rows.
@@ -38,14 +62,18 @@ async function loadHealthData(): Promise<HealthDataRow[]> {
   try {
     const fileContent = await fs.promises.readFile(filePath, 'utf-8');
     
-    // Simple CSV parser
     const rows = fileContent.split('\n').filter(row => row.trim() !== '');
-    const headers = rows[0].split(',').map(h => h.trim());
+    if (rows.length < 2) {
+        return []; // Not enough data
+    }
+
+    const headers = parseCsvLine(rows[0]).map(h => h.trim());
+    
     const data = rows.slice(1).map(row => {
-        const values = row.split(',').map(v => v.trim());
+        const values = parseCsvLine(row);
         const entry: any = {};
         headers.forEach((header, index) => {
-            entry[header] = values[index];
+            entry[header] = values[index] || '';
         });
         return entry as HealthDataRow;
     });
@@ -70,20 +98,31 @@ export async function searchHealthData(symptoms: string[]): Promise<any[]> {
       return [];
   }
 
-  const lowercasedSymptoms = symptoms.map(s => s.toLowerCase());
+  const lowercasedSymptoms = symptoms.map(s => s.toLowerCase().trim());
+  const matchedDiseases = new Set<string>();
+  const results: any[] = [];
 
-  const results = data.filter(row => {
-    const rowSymptoms = row.Symptoms.toLowerCase().split(',').map(s => s.trim());
-    return lowercasedSymptoms.some(userSymptom => rowSymptoms.includes(userSymptom));
+  data.forEach(row => {
+    // Prevent duplicates
+    if (matchedDiseases.has(row.Disease)) {
+        return;
+    }
+
+    const rowSymptoms = (row.Symptoms || '').toLowerCase().split(',').map(s => s.trim());
+    const isMatch = lowercasedSymptoms.some(userSymptom => rowSymptoms.includes(userSymptom));
+    
+    if (isMatch) {
+      results.push({
+          disease: row.Disease,
+          description: row.Description,
+          medication: row.Medication,
+          diets: row.Diets,
+          workout: row.Workout,
+          precaution: row.Precautions
+      });
+      matchedDiseases.add(row.Disease);
+    }
   });
 
-  // Map to the format expected by the AI tool
-  return results.map(row => ({
-      disease: row.Disease,
-      description: row.Description,
-      medication: row.Medication,
-      diets: row.Diets,
-      workout: row.Workout,
-      precaution: row.Precautions
-  }));
+  return results;
 }

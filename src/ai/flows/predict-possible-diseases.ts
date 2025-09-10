@@ -41,10 +41,12 @@ const prompt = ai.definePrompt({
   input: {schema: PredictPossibleDiseasesInputSchema},
   output: {schema: PredictPossibleDiseasesOutputSchema},
   tools: [getConditionInfoTool],
-  prompt: `You are a medical assistant. Based on the symptoms provided by the user, you will predict possible diseases.
-Use the 'getConditionInfoTool' to look up the symptoms in the knowledge base and identify the most likely diseases.
-
-Symptoms: {{#each symptoms}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}`,
+  prompt: `You are a medical assistant. Your task is to identify possible diseases based on a user's symptoms.
+  1. Use the 'getConditionInfoTool' to search for the provided symptoms in the knowledge base.
+  2. The tool will return a list of conditions that match the symptoms.
+  3. Your output should be a direct list of the 'disease' names from the tool's results. Do not infer, add, or remove any diseases.
+  
+  Symptoms: {{#each symptoms}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}`,
 });
 
 const predictPossibleDiseasesFlow = ai.defineFlow(

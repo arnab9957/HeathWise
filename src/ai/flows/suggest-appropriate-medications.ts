@@ -57,22 +57,15 @@ const prompt = ai.definePrompt({
   output: {schema: SuggestAppropriateMedicationsOutputSchema},
   tools: [getConditionInfoTool],
   prompt: `You are a medical expert specializing in medication recommendations.
+  1. Use the 'getConditionInfoTool' to look up information about the user's symptoms.
+  2. The tool will return a list of conditions, including relevant medications.
+  3. From the tool's results, find the entry that matches the '{{{predictedDisease}}}'.
+  4. List the exact medications provided in the 'medication' field for that disease.
+  5. Format the output as a clean, bulleted list. Each medication should be bolded.
 
-Use the 'getConditionInfoTool' to look up information about the user's symptoms to find relevant medication suggestions from the knowledge base. Base your recommendations primarily on the data returned from the tool.
+  Patient Profile: {{{patientProfile}}}
 
-Based on the predicted disease and patient profile, suggest a list of appropriate over-the-counter medications. For each suggestion, provide a brief, one-sentence description of what it is used for.
-
-Use a clear, bulleted list format for the suggestions.
-
-Predicted Disease: {{{predictedDisease}}}
-Patient Profile: {{{patientProfile}}}
-
-Example format:
-- **Ibuprofen**: A nonsteroidal anti-inflammatory drug (NSAID) used for pain relief and reducing fever.
-- **Acetaminophen**: An analgesic and antipyretic used to treat pain and fever.
-- **Loratadine**: An antihistamine used to treat allergies.
-
-Include a disclaimer that these suggestions are not a substitute for professional medical advice and that the user should consult with their healthcare provider before taking any medication.
+  Include a standard disclaimer: "These suggestions are not a substitute for professional medical advice. Always consult with your healthcare provider before taking any medication."
 `,
 });
 
