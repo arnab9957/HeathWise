@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Flow for generating personalized diet charts based on predicted condition and demographics.
+ * @fileOverview Flow for generating personalized diet charts based on a predicted condition and demographics.
  *
  * - generatePersonalizedDietChart - A function that generates personalized diet charts.
  * - PersonalizedDietChartInput - The input type for the generatePersonalizedDietChart function.
@@ -65,26 +65,23 @@ const prompt = ai.definePrompt({
   - Activity Level: {{{activityLevel}}}
   - Dietary Restrictions: {{{dietaryRestrictions}}}
 
-  Create a detailed diet chart with meal suggestions (breakfast, lunch, dinner, and snacks) and approximate nutritional information (calories, protein, carbs, and fats) for each meal. Make sure each meal suggestion is realistic, healthy and delicious.
+  Create a detailed 7-day diet chart with meal suggestions (breakfast, lunch, dinner, and snacks) and approximate nutritional information (calories, protein, carbs, and fats) for each meal.
   Tailor the diet chart to address the predicted condition and accommodate any dietary restrictions.
-  Present the diet chart in a clear and easy-to-understand format.
-  The diet chart must have a heading for each day of the week, and the heading must display the day of the week (e.g. Monday).
-  Do not be overly specific, rather keep it simple and easy to follow.
-  Example:
-  Monday
-  Breakfast: Oatmeal with berries and nuts (400 calories, 15g protein, 50g carbs, 20g fats)
-  Lunch: Grilled chicken salad with mixed greens and vegetables (500 calories, 30g protein, 40g carbs, 25g fats)
-  Dinner: Baked salmon with quinoa and steamed broccoli (600 calories, 40g protein, 50g carbs, 30g fats)
-  Snacks: Apple slices with almond butter (200 calories, 5g protein, 20g carbs, 10g fats)
 
-  Make sure to only respond with the diet chart.
-  Do not start the response with "Here is your diet chart:"
-  Do not end the response with any additional information.
-  The diet chart should span an entire week.
-  The chart must have the day of the week, and then the diet for that day.
-  Make sure there are no additional lines or any other words other than the meal plans and information for the meal plan.
+  Present the diet chart in a clear and easy-to-understand format using Markdown.
+  - Use a main heading for each day of the week (e.g., "Monday").
+  - Under each day, use bullet points for each meal (Breakfast, Lunch, Dinner, Snacks).
+  - Each bullet point should be bolded.
+  - Do not include any introductory or concluding text. Respond only with the diet chart.
+
+  Example format:
+  Monday
+  - **Breakfast**: Oatmeal with berries and nuts (400 calories, 15g protein, 50g carbs, 20g fats)
+  - **Lunch**: Grilled chicken salad with mixed greens and vegetables (500 calories, 30g protein, 40g carbs, 25g fats)
+  - **Dinner**: Baked salmon with quinoa and steamed broccoli (600 calories, 40g protein, 50g carbs, 30g fats)
+  - **Snacks**: Apple slices with almond butter (200 calories, 5g protein, 20g carbs, 10g fats)
   `,
-})
+});
 
 const generatePersonalizedDietChartFlow = ai.defineFlow(
   {
