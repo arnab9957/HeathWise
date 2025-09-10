@@ -9,11 +9,13 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { getConditionInfoTool } from '@/ai/tools/get-condition-info';
 
 const PersonalizedDietChartInputSchema = z.object({
   predictedCondition: z
     .string()
     .describe('The predicted health condition of the user.'),
+  symptoms: z.array(z.string()).describe('A list of symptoms the user is experiencing.'),
   age: z.number().describe('The age of the user in years.'),
   gender: z.string().describe('The gender of the user (male or female).'),
   weight: z.number().describe('The weight of the user in kilograms.'),
@@ -54,10 +56,14 @@ const prompt = ai.definePrompt({
   name: 'personalizedDietChartPrompt',
   input: {schema: PersonalizedDietChartInputSchema},
   output: {schema: PersonalizedDietChartOutputSchema},
+  tools: [getConditionInfoTool],
   prompt: `You are a registered dietitian creating personalized diet charts for users based on their health condition, demographics, and lifestyle.
 
-  Consider the following information:
+  Use the 'getConditionInfoTool' to look up information about the user's symptoms to find relevant diet, workout, and precaution information from the knowledge base. Base your recommendations primarily on the data returned from the tool.
+
+  Consider the following user information:
   - Predicted Condition: {{{predictedCondition}}}
+  - Symptoms: {{#each symptoms}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
   - Age: {{{age}}} years
   - Gender: {{{gender}}}
   - Weight: {{{weight}}} kg
@@ -65,21 +71,14 @@ const prompt = ai.definePrompt({
   - Activity Level: {{{activityLevel}}}
   - Dietary Restrictions: {{{dietaryRestrictions}}}
 
-  Create a detailed 7-day diet chart with meal suggestions (breakfast, lunch, dinner, and snacks) and approximate nutritional information (calories, protein, carbs, and fats) for each meal.
-  Tailor the diet chart to address the predicted condition and accommodate any dietary restrictions.
+  Create a detailed 7-day diet chart with meal suggestions (breakfast, lunch, dinner, and snacks).
+  Also include a simple workout plan and any necessary precautions based on the information from the tool.
 
   Present the diet chart in a clear and easy-to-understand format using Markdown.
-  - Use a main heading for each day of the week (e.g., "Monday").
+  - Use a main heading for each section (e.g., "Diet Plan", "Workout Routine", "Precautions").
   - Under each day, use bullet points for each meal (Breakfast, Lunch, Dinner, Snacks).
   - Each bullet point should be bolded.
   - Do not include any introductory or concluding text. Respond only with the diet chart.
-
-  Example format:
-  Monday
-  - **Breakfast**: Oatmeal with berries and nuts (400 calories, 15g protein, 50g carbs, 20g fats)
-  - **Lunch**: Grilled chicken salad with mixed greens and vegetables (500 calories, 30g protein, 40g carbs, 25g fats)
-  - **Dinner**: Baked salmon with quinoa and steamed broccoli (600 calories, 40g protein, 50g carbs, 30g fats)
-  - **Snacks**: Apple slices with almond butter (200 calories, 5g protein, 20g carbs, 10g fats)
   `,
 });
 

@@ -39,7 +39,7 @@ export default function Home() {
           <div className="inline-flex items-center justify-center bg-primary/10 text-primary rounded-full p-4 mb-4">
             <Stethoscope className="w-12 h-12" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary tracking-tight">HealthWise AI</h1>
+          <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary tracking-tight">HealthWise</h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
             Your intelligent health companion. Enter your symptoms and personal details to get AI-powered insights into your health.
           </p>
@@ -62,7 +62,7 @@ export default function Home() {
 
       </main>
       <footer className="text-center p-4 text-muted-foreground text-sm">
-        <p>Disclaimer: HealthWise AI provides information for educational purposes only and is not a substitute for professional medical advice. Always consult with a qualified healthcare provider for any health concerns.</p>
+        <p>Disclaimer: HealthWise provides information for educational purposes only and is not a substitute for professional medical advice. Always consult with a qualified healthcare provider for any health concerns.</p>
       </footer>
     </div>
   );

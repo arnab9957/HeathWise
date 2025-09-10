@@ -21,6 +21,7 @@ export async function getHealthAnalysis(data: HealthFormData): Promise<{ success
             suggestAppropriateMedications({
                 predictedDisease,
                 patientProfile,
+                symptoms: symptomsArray,
             }),
             generatePersonalizedDietChart({
                 predictedCondition: predictedDisease,
@@ -28,6 +29,7 @@ export async function getHealthAnalysis(data: HealthFormData): Promise<{ success
                 gender: data.gender,
                 weight: data.weight,
                 height: data.height,
+                symptoms: symptomsArray,
                 activityLevel: data.activityLevel.replace(/_/g, ' '),
                 dietaryRestrictions: data.dietaryRestrictions || 'None',
             })

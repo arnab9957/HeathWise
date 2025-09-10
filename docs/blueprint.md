@@ -1,4 +1,4 @@
-# **App Name**: HealthWise AI
+# **App Name**: HealthWise
 
 ## Core Features:
 

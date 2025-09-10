@@ -9,12 +9,14 @@
  */
 
 import {ai} from '@/ai/genkit';
+import { getConditionInfoTool } from '@/ai/tools/get-condition-info';
 import {z} from 'genkit';
 
 const SuggestAppropriateMedicationsInputSchema = z.object({
   predictedDisease: z
     .string()
     .describe('The disease predicted by the disease prediction model.'),
+  symptoms: z.array(z.string()).describe('A list of symptoms the user is experiencing.'),
   patientProfile: z
     .string()
     .describe(
@@ -53,7 +55,10 @@ const prompt = ai.definePrompt({
   name: 'suggestAppropriateMedicationsPrompt',
   input: {schema: SuggestAppropriateMedicationsInputSchema},
   output: {schema: SuggestAppropriateMedicationsOutputSchema},
+  tools: [getConditionInfoTool],
   prompt: `You are a medical expert specializing in medication recommendations.
+
+Use the 'getConditionInfoTool' to look up information about the user's symptoms to find relevant medication suggestions from the knowledge base. Base your recommendations primarily on the data returned from the tool.
 
 Based on the predicted disease and patient profile, suggest a list of appropriate over-the-counter medications. For each suggestion, provide a brief, one-sentence description of what it is used for.
 
