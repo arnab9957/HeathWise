@@ -8,6 +8,11 @@ export const healthFormSchema = z.object({
   height: z.coerce.number().min(1, { message: 'Height must be a positive number.' }),
   activityLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extra_active'], { required_error: 'Please select an activity level.' }),
   dietaryRestrictions: z.string().optional(),
+}).refine(data => {
+    (data.age as unknown) = String(data.age);
+    (data.weight as unknown) = String(data.weight);
+    (data.height as unknown) = String(data.height);
+    return true;
 });
 
 export type HealthFormData = z.infer<typeof healthFormSchema>;
