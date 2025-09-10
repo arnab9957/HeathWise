@@ -23,25 +23,39 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import React from "react"
 
 type HealthFormProps = {
   onSubmit: (data: HealthFormData) => void;
   isLoading: boolean;
 };
 
+const defaultValues: HealthFormData = {
+  symptoms: "",
+  age: 30,
+  gender: "male",
+  weight: 70,
+  height: 175,
+  activityLevel: "moderately_active",
+  dietaryRestrictions: "",
+};
+
 export function HealthForm({ onSubmit, isLoading }: HealthFormProps) {
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const form = useForm<HealthFormData>({
     resolver: zodResolver(healthFormSchema),
-    defaultValues: {
-      symptoms: "",
-      age: 30,
-      gender: "male",
-      weight: 70,
-      height: 175,
-      activityLevel: "moderately_active",
-      dietaryRestrictions: "",
-    },
+    defaultValues: defaultValues,
   });
+
+  if (!isClient) {
+    // Render a loading state or null on the server to avoid hydration mismatch
+    return null; 
+  }
 
   return (
     <Card className="max-w-4xl mx-auto shadow-lg">
@@ -79,7 +93,7 @@ export function HealthForm({ onSubmit, isLoading }: HealthFormProps) {
                   <FormItem>
                     <FormLabel>Age</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="30" {...field} value={String(field.value)} />
+                      <Input type="number" placeholder="30" {...field} value={field.value} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -113,7 +127,7 @@ export function HealthForm({ onSubmit, isLoading }: HealthFormProps) {
                   <FormItem>
                     <FormLabel>Weight (kg)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="70" {...field} value={String(field.value)} />
+                      <Input type="number" placeholder="70" {...field} value={field.value} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -126,7 +140,7 @@ export function HealthForm({ onSubmit, isLoading }: HealthFormProps) {
                   <FormItem>
                     <FormLabel>Height (cm)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="175" {...field} value={String(field.value)} />
+                      <Input type="number" placeholder="175" {...field} value={field.value} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
