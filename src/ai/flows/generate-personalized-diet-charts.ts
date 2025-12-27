@@ -7,8 +7,8 @@
  * - PersonalizedDietChartOutput - The return type for the generatePersonalizedDietChart function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 import { getConditionInfoTool } from '@/ai/tools/get-condition-info';
 
 const PersonalizedDietChartInputSchema = z.object({
@@ -54,12 +54,17 @@ export async function generatePersonalizedDietChart(
 
 const prompt = ai.definePrompt({
   name: 'personalizedDietChartPrompt',
-  input: {schema: PersonalizedDietChartInputSchema},
-  output: {schema: PersonalizedDietChartOutputSchema},
+  input: { schema: PersonalizedDietChartInputSchema },
+  output: { schema: PersonalizedDietChartOutputSchema },
   tools: [getConditionInfoTool],
   prompt: `You are a registered dietitian creating personalized diet charts for users based on their health condition, demographics, and lifestyle.
 
-  Use the 'getConditionInfoTool' to look up information about the user's symptoms to find relevant diet, workout, and precaution information from the knowledge base. Base your recommendations primarily on the data returned from the tool.
+  Use the 'getConditionInfoTool' to look up information about the user's symptoms to find relevant diet, workout, and precaution information from the knowledge base.
+  
+  CRITICAL INSTRUCTION: The information from the tool is a generic guideline. You MUST generate a HIGHLY PERSONALIZED 7-day diet chart specifically tailored to this user's profile.
+  - Adjust caloric intake and macronutrients based on their Age ({{{age}}}), Gender ({{{gender}}}), Weight ({{{weight}}}kg), Height ({{{height}}}cm), and Activity Level ({{{activityLevel}}}).
+  - STRICTLY ADHERE to their Dietary Restrictions: {{{dietaryRestrictions}}}.
+  - For example, an active young male should have significantly different portion sizes and energy sources compared to a sedentary older female, even for the same condition.
 
   Consider the following user information:
   - Predicted Condition: {{{predictedCondition}}}
@@ -72,7 +77,7 @@ const prompt = ai.definePrompt({
   - Dietary Restrictions: {{{dietaryRestrictions}}}
 
   Create a detailed 7-day diet chart with meal suggestions (breakfast, lunch, dinner, and snacks).
-  Also include a simple workout plan and any necessary precautions based on the information from the tool.
+  Also include a personalized workout plan and specific precautions, blending the tool's medical advice with the user's lifestyle capabilities.
 
   Present the diet chart in a clear and easy-to-understand format using Markdown.
   - Use a main heading for each section (e.g., "Diet Plan", "Workout Routine", "Precautions").
@@ -89,7 +94,7 @@ const generatePersonalizedDietChartFlow = ai.defineFlow(
     outputSchema: PersonalizedDietChartOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const { output } = await prompt(input);
     return output!;
   }
 );

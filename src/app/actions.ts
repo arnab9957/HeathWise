@@ -4,11 +4,18 @@ import type { HealthFormData, AnalysisResult } from '@/lib/schemas';
 import { predictPossibleDiseases } from '@/ai/flows/predict-possible-diseases';
 import { suggestAppropriateMedications } from '@/ai/flows/suggest-appropriate-medications';
 import { generatePersonalizedDietChart } from '@/ai/flows/generate-personalized-diet-charts';
+import { initWandb, logMetrics, finishRun } from '@/lib/wandb';
 
 export async function getHealthAnalysis(data: HealthFormData): Promise<{ success: boolean; data?: AnalysisResult; error?: string }> {
     try {
+        await initWandb();
+        const startTime = Date.now();
+        console.log('Starting health analysis...');
+
         const symptomsArray = data.symptoms.split(',').map(s => s.trim()).filter(s => s);
         if (symptomsArray.length === 0) {
+            logMetrics({ event: 'validation_error', error: 'No symptoms provided' });
+            await finishRun();
             return { success: false, error: 'Please provide at least one symptom.' };
         }
 
@@ -35,6 +42,18 @@ export async function getHealthAnalysis(data: HealthFormData): Promise<{ success
             })
         ]);
 
+        // Log successful run metrics
+        logMetrics({
+            event: 'health_analysis_success',
+            duration_ms: Date.now() - startTime,
+            age: data.age,
+            gender: data.gender,
+            symptoms_count: symptomsArray.length,
+            predicted_disease: predictedDisease,
+            diseases_found: diseasePrediction.possibleDiseases.length
+        });
+        await finishRun();
+
         return {
             success: true,
             data: {
@@ -48,6 +67,9 @@ export async function getHealthAnalysis(data: HealthFormData): Promise<{ success
         };
     } catch (error) {
         console.error("Error in getHealthAnalysis:", error);
+
+        logMetrics({ event: 'health_analysis_error', error: String(error) });
+        await finishRun();
         return { success: false, error: 'An AI-related error occurred. Please check your inputs and try again.' };
     }
 }

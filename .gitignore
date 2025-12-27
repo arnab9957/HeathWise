@@ -43,3 +43,14 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+.venv
+venv/
+__pycache__/
+*.pyc
+
+
+wandb/
+
+# clerk configuration (can include secrets)
+/.clerk/

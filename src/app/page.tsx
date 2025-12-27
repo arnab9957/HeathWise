@@ -1,5 +1,7 @@
 "use client";
 
+import Image from 'next/image';
+
 import { useState } from 'react';
 import type { AnalysisResult, HealthFormData } from '@/lib/schemas';
 import { getHealthAnalysis } from '@/app/actions';
@@ -7,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { HealthForm } from '@/components/health-form';
 import { ResultsDisplay } from '@/components/results-display';
 import { Loader2, Stethoscope } from 'lucide-react';
+import { UserButton } from '@clerk/nextjs';
 
 export default function Home() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -33,11 +36,21 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground relative">
+      <div className="absolute top-4 right-4 z-10">
+        <UserButton />
+      </div>
       <main className="container mx-auto px-4 py-8 md:py-16">
         <header className="text-center mb-12">
-          <div className="inline-flex items-center justify-center bg-primary/10 text-primary rounded-full p-4 mb-4">
-            <Stethoscope className="w-12 h-12" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="HealthWise Logo"
+              width={120}
+              height={120}
+              className="object-contain"
+              priority
+            />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary tracking-tight">HealthWise</h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -46,7 +59,7 @@ export default function Home() {
         </header>
 
         <HealthForm onSubmit={handleFormSubmit} isLoading={isLoading} />
-        
+
         {isLoading && (
           <div className="flex justify-center items-center mt-12">
             <Loader2 className="w-12 h-12 animate-spin text-primary" />
