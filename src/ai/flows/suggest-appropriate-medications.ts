@@ -8,9 +8,9 @@
  * - SuggestAppropriateMedicationsOutput - The return type for the suggestAppropriateMedications function.
  */
 
-import {ai} from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { getConditionInfoTool } from '@/ai/tools/get-condition-info';
-import {z} from 'genkit';
+import { z } from 'genkit';
 
 const SuggestAppropriateMedicationsInputSchema = z.object({
   predictedDisease: z
@@ -53,15 +53,16 @@ export async function suggestAppropriateMedications(
 
 const prompt = ai.definePrompt({
   name: 'suggestAppropriateMedicationsPrompt',
-  input: {schema: SuggestAppropriateMedicationsInputSchema},
-  output: {schema: SuggestAppropriateMedicationsOutputSchema},
+  input: { schema: SuggestAppropriateMedicationsInputSchema },
+  output: { schema: SuggestAppropriateMedicationsOutputSchema },
   tools: [getConditionInfoTool],
   prompt: `You are a medical expert specializing in medication recommendations.
   1. Use the 'getConditionInfoTool' to look up information about the user's symptoms.
   2. The tool will return a list of conditions, including relevant medications.
-  3. From the tool's results, find the entry that matches the '{{{predictedDisease}}}'.
-  4. List the exact medications provided in the 'medication' field for that disease.
-  5. Format the output as a clean, bulleted list. Each medication should be bolded.
+  3. Try to find the entry that matches the '{{{predictedDisease}}}'.
+  4. If a match is found, list the exact medications provided in the 'medication' field for that disease.
+  5. **FALLBACK:** If the tool returns NO information for the '{{{predictedDisease}}}' (which can happen if the disease was inferred by AI), you must use your general medical knowledge to suggest standard over-the-counter medications and precautions.
+  6. Format the output as a clean, bulleted list. Each medication should be bolded.
 
   Patient Profile: {{{patientProfile}}}
 
@@ -76,7 +77,7 @@ const suggestAppropriateMedicationsFlow = ai.defineFlow(
     outputSchema: SuggestAppropriateMedicationsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const { output } = await prompt(input);
     return output!;
   }
 );

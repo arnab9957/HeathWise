@@ -40,7 +40,17 @@ export function ResultsDisplay({ results }: { results: AnalysisResult }) {
           </TabsList>
 
           <TabsContent value="prediction" className="mt-6">
-            <h3 className="text-lg font-semibold mb-4">Possible Conditions</h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Possible Conditions</h3>
+              {results.source && (
+                <Badge
+                  variant={results.source === 'database' ? 'default' : 'outline'}
+                  className="text-xs"
+                >
+                  {results.source === 'database' ? '📊 Database Match' : '🤖 AI Prediction'}
+                </Badge>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {results.diseases.length > 0 ? (
                 results.diseases.map((disease, index) => (
@@ -50,20 +60,25 @@ export function ResultsDisplay({ results }: { results: AnalysisResult }) {
                 <p>No specific conditions identified based on symptoms.</p>
               )}
             </div>
+            {results.confidence && (
+              <p className="text-sm text-muted-foreground mt-3 italic">
+                {results.confidence}
+              </p>
+            )}
             <p className="text-sm text-muted-foreground mt-4">These are potential conditions based on the symptoms provided and are not a formal diagnosis.</p>
           </TabsContent>
-          
+
           <TabsContent value="medication" className="mt-6 space-y-4">
             <div>
               <h3 className="text-lg font-semibold">Suggested Medications</h3>
               <MarkdownDisplay content={results.medications.suggestions} />
             </div>
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start text-amber-800">
-                <AlertCircle className="w-5 h-5 mr-3 mt-1 shrink-0" />
-                <div>
-                    <h4 className="font-semibold">Disclaimer</h4>
-                    <p className="text-sm">{results.medications.disclaimer}</p>
-                </div>
+              <AlertCircle className="w-5 h-5 mr-3 mt-1 shrink-0" />
+              <div>
+                <h4 className="font-semibold">Disclaimer</h4>
+                <p className="text-sm">{results.medications.disclaimer}</p>
+              </div>
             </div>
           </TabsContent>
 

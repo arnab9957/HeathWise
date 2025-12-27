@@ -37,9 +37,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
-      <div className="absolute top-4 right-4 z-10">
-        <UserButton />
-      </div>
       <main className="container mx-auto px-4 py-8 md:py-16">
         <header className="text-center mb-12">
           <div className="inline-flex items-center justify-center mb-4">

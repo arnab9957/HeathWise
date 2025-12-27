@@ -61,6 +61,9 @@ const prompt = ai.definePrompt({
 
   Use the 'getConditionInfoTool' to look up information about the user's symptoms to find relevant diet, workout, and precaution information from the knowledge base.
   
+  If the tool returns information for the '{{{predictedCondition}}}', use it as a base.
+  **FALLBACK:** If the tool returns NO information (e.g., for an AI-inferred condition), generate a diet chart based on general medical guidelines for that condition.
+  
   CRITICAL INSTRUCTION: The information from the tool is a generic guideline. You MUST generate a HIGHLY PERSONALIZED 7-day diet chart specifically tailored to this user's profile.
   - Adjust caloric intake and macronutrients based on their Age ({{{age}}}), Gender ({{{gender}}}), Weight ({{{weight}}}kg), Height ({{{height}}}cm), and Activity Level ({{{activityLevel}}}).
   - STRICTLY ADHERE to their Dietary Restrictions: {{{dietaryRestrictions}}}.

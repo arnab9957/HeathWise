@@ -1,109 +1,107 @@
 'use server';
 
-/**
- * @fileOverview Predicts possible diseases based on user-provided symptoms.
- *
- * - predictPossibleDiseases - A function that takes a list of symptoms and returns a list of possible diseases.
- * - PredictPossibleDiseasesInput - The input type for the predictPossibleDiseases function.
- * - PredictPossibleDiseasesOutput - The return type for the predictPossibleDiseases function.
- */
-
 import { ai } from '@/ai/genkit';
-import { getConditionInfoTool } from '@/ai/tools/get-condition-info';
 import { z } from 'genkit';
-import symptomsList from '@/lib/symptoms_list.json';
+import { readFileSync } from 'fs';
+import { parse } from 'csv-parse/sync';
+import path from 'path';
 
 const PredictPossibleDiseasesInputSchema = z.object({
-  symptoms: z
-    .array(z.string())
-    .describe('A list of symptoms the user is experiencing.'),
+  symptoms: z.array(z.string()).describe('A list of symptoms the user is experiencing.'),
 });
-export type PredictPossibleDiseasesInput = z.infer<
-  typeof PredictPossibleDiseasesInputSchema
->;
+export type PredictPossibleDiseasesInput = z.infer<typeof PredictPossibleDiseasesInputSchema>;
 
 const PredictPossibleDiseasesOutputSchema = z.object({
-  possibleDiseases: z
-    .array(z.string())
-    .describe('A list of possible diseases based on the symptoms.'),
+  possibleDiseases: z.array(z.string()).describe('A list of possible diseases based on the symptoms.'),
+  source: z.enum(['database', 'ai']).describe('Whether the prediction came from the database or AI'),
+  confidence: z.string().optional().describe('Confidence level of the prediction'),
 });
-export type PredictPossibleDiseasesOutput = z.infer<
-  typeof PredictPossibleDiseasesOutputSchema
->;
+export type PredictPossibleDiseasesOutput = z.infer<typeof PredictPossibleDiseasesOutputSchema>;
 
-export async function predictPossibleDiseases(
-  input: PredictPossibleDiseasesInput
-): Promise<PredictPossibleDiseasesOutput> {
-  return predictPossibleDiseasesFlow(input);
-}
+export async function predictPossibleDiseases(input: PredictPossibleDiseasesInput): Promise<PredictPossibleDiseasesOutput> {
+  try {
+    console.log('🔍 Searching database for symptoms:', input.symptoms);
+    const datasetPath = path.join(process.cwd(), 'docs/medicine-recommendation-system-dataset/dataset.csv');
+    const csvContent = readFileSync(datasetPath, 'utf-8');
+    type DatasetRecord = {
+      Disease: string;
+      Symptoms: string;
+    };
+    const records = parse(csvContent, { columns: true, skip_empty_lines: true }) as DatasetRecord[];
 
-const prompt = ai.definePrompt({
-  name: 'predictPossibleDiseasesPrompt',
-  input: { schema: PredictPossibleDiseasesInputSchema },
-  output: { schema: PredictPossibleDiseasesOutputSchema },
-  tools: [getConditionInfoTool],
-  prompt: `You are a medical assistant. Your task is to identify possible diseases based on a user's symptoms.
-  
-  first, map the user's provided symptoms to the closest matching symptoms from the following valid list:
-  Valid Symptoms: {{validSymptoms}}
+    const diseaseMatches = new Map<string, number>();
 
-  Then, using ONLY the mapped valid symptoms, use the 'getConditionInfoTool' to search for the conditions in the knowledge base.
-  
-  1. Map user input "{{userSymptoms}}" to valid symptoms. For example, "bleeding with cough" -> "blood_in_sputum".
-  2. Use 'getConditionInfoTool' with the list of mapped valid symptoms.
-  3. The tool will return a list of conditions that match the symptoms.
-  4. Your output should be a direct list of the 'disease' names from the tool's results. Do not infer, add, or remove any diseases.
-  
-  Symptoms: {{#each symptoms}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}`,
-});
+    for (const record of records) {
+      const disease = record.Disease;
+      const diseaseSymptoms = record.Symptoms.split(',').map((s: string) => s.trim().toLowerCase());
 
-const predictPossibleDiseasesFlow = ai.defineFlow(
-  {
-    name: 'predictPossibleDiseasesFlow',
-    inputSchema: PredictPossibleDiseasesInputSchema,
-    outputSchema: PredictPossibleDiseasesOutputSchema,
-  },
-  async input => {
-    const validSymptomsString = symptomsList.join(', ');
-    const userSymptomsString = input.symptoms.join(', ');
+      const matchCount = input.symptoms.filter(symptom =>
+        diseaseSymptoms.some(ds => ds.includes(symptom.toLowerCase()) || symptom.toLowerCase().includes(ds))
+      ).length;
 
-    // We pass the context to the prompt manually since we can't easily add it to input schema without changing the signature
-    // Actually, definePrompt input schema must match what we pass.
-    // Let's cheat and pass it as part of the input to the prompt function, bypassing strict matching if possible,
-    // OR we just hardcode the list in the prompt text if it's not too huge (132 items is fine).
-    // Better: Helper function to map? No, let the LLM do it.
+      if (matchCount > 0) {
+        diseaseMatches.set(disease, (diseaseMatches.get(disease) || 0) + matchCount);
+      }
+    }
 
-    // The 'prompt' function expects 'PredictPossibleDiseasesInput'.
-    // I can't pass 'validSymptoms' unless I change the schema.
-    // Changing the schema breaks the contract with the caller (server action).
+    const sortedDiseases = Array.from(diseaseMatches.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([disease]) => disease);
 
-    // Workaround: Embed the list directly in the prompt string using template literal locally, 
-    // rather than Handlebars variable if usage is static.
-    // BUT the prompt is defined statically.
+    if (sortedDiseases.length === 0) {
+      console.log('⚠️ No matches found in database. Using Gemini AI for prediction...');
+      const { output } = await ai.generate({
+        model: 'googleai/gemini-2.0-flash-exp',
+        prompt: `You are a medical AI assistant. Based on the following symptoms, predict 3-5 possible diseases or medical conditions.
 
-    // Let's redefine the input schema for the *prompt* (not the flow) to include validSymptoms?
-    // "input: {schema: PredictPossibleDiseasesInputSchema}" -> No, this locks it.
+Symptoms: ${input.symptoms.join(', ')}
 
-    // Let's just modify the input passed to the prompt call?
-    // Genkit might complain if input doesn't match schema.
+Provide ONLY the disease names, one per line, without numbering, bullets, or explanations. Be specific and medically accurate.`,
+        output: {
+          schema: z.object({
+            diseases: z.array(z.string()).describe('List of possible diseases'),
+            reasoning: z.string().describe('Brief explanation of the prediction'),
+          }),
+        },
+      });
 
-    // Alternative: Use a separate step.
-    // 1. LLM call to map symptoms.
-    // 2. Tool call with mapped symptoms.
+      console.log('🤖 AI Prediction completed:', output?.diseases || []);
+      return {
+        possibleDiseases: output?.diseases || [],
+        source: 'ai',
+        confidence: 'AI-generated prediction based on symptom analysis'
+      };
+    }
 
-    // But the current flow uses `prompt(input)`. 
-    // I can just change the prompt text to include the list hardcoded.
-    // 132 items * ~2 tokens = ~300 tokens. Totally fine.
+    console.log('✅ Found matches in database:', sortedDiseases);
+    return {
+      possibleDiseases: sortedDiseases,
+      source: 'database',
+      confidence: `Matched ${diseaseMatches.get(sortedDiseases[0])} symptoms`,
+    };
+  } catch (error) {
+    console.error('❌ Error accessing database. Falling back to Gemini AI:', error);
+    const { output } = await ai.generate({
+      model: 'googleai/gemini-2.0-flash-exp',
+      prompt: `You are a medical AI assistant. Based on the following symptoms, predict 3-5 possible diseases or medical conditions.
 
-    // Wait, I can't easily import JSON inside `definePrompt` template string if it's outside scope?
-    // I can generate the string here.
+Symptoms: ${input.symptoms.join(', ')}
 
-    const { output } = await prompt({
-      ...input,
-      // @ts-ignore - passing extra data to handlebars context even if not in zod schema (might work depending on genkit version)
-      validSymptoms: validSymptomsString,
-      userSymptoms: userSymptomsString
+Provide ONLY the disease names, one per line, without numbering, bullets, or explanations. Be specific and medically accurate.`,
+      output: {
+        schema: z.object({
+          diseases: z.array(z.string()).describe('List of possible diseases'),
+          reasoning: z.string().describe('Brief explanation of the prediction'),
+        }),
+      },
     });
-    return output!;
+
+    console.log('🤖 AI Fallback prediction completed:', output?.diseases || []);
+    return {
+      possibleDiseases: output?.diseases || [],
+      source: 'ai',
+      confidence: 'AI-generated prediction (database unavailable)',
+    };
   }
-);
+}

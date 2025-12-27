@@ -58,6 +58,8 @@ export async function getHealthAnalysis(data: HealthFormData): Promise<{ success
             success: true,
             data: {
                 diseases: diseasePrediction.possibleDiseases,
+                source: diseasePrediction.source,
+                confidence: diseasePrediction.confidence,
                 medications: {
                     suggestions: medicationSuggestion.medicationSuggestions,
                     disclaimer: medicationSuggestion.disclaimer
