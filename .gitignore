@@ -39,13 +39,19 @@ next-env.d.ts
 
 .genkit/*
 .env*
+!.env.example
 
 # firebase
 firebase-debug.log
 firestore-debug.log
 
-
 .venv
 venv/
 __pycache__/
 *.pyc
+
+
+wandb/
+
+# clerk configuration (can include secrets)
+/.clerk/

@@ -129,34 +129,31 @@ async function main() {
         });
     }
 
+
     // 8. Read Supplemental Data
     const suppPath = path.join(DATASET_DIR, 'supplemental_data.csv');
     if (fs.existsSync(suppPath)) {
         console.log('Found supplemental_data.csv, merging...');
         const suppContent = fs.readFileSync(suppPath, 'utf-8');
-        try {
-            const suppRecords = parse(suppContent, { columns: true, skip_empty_lines: true }) as any[];
+        const suppRecords = parse(suppContent, { columns: true, skip_empty_lines: true }) as any[];
 
-            for (const r of suppRecords) {
-                mergedRows.push({
-                    Disease: r.Disease,
-                    Symptoms: r.Symptoms, // Already comma-separated string in CSV
-                    Description: r.Description,
-                    Medication: r.Medication,
-                    Diets: r.Diets,
-                    Workout: r.Workout,
-                    Precautions: r.Precautions
-                });
-                // Also add these symptoms to our symptoms list for the AI
-                const rowSymptoms = r.Symptoms.split(',').map((s: string) => s.trim());
-                for (const s of rowSymptoms) {
-                    if (!symptomKeys.includes(s)) {
-                        symptomKeys.push(s);
-                    }
+        for (const r of suppRecords) {
+            mergedRows.push({
+                Disease: r.Disease,
+                Symptoms: r.Symptoms, // Already comma-separated string in CSV
+                Description: r.Description,
+                Medication: r.Medication,
+                Diets: r.Diets,
+                Workout: r.Workout,
+                Precautions: r.Precautions
+            });
+            // Also add these symptoms to our symptoms list for the AI
+            const rowSymptoms = r.Symptoms.split(',').map((s: string) => s.trim());
+            for (const s of rowSymptoms) {
+                if (!symptomKeys.includes(s)) {
+                    symptomKeys.push(s);
                 }
             }
-        } catch (e) {
-            console.error('Error parsing supplemental_data.csv:', e);
         }
     }
 

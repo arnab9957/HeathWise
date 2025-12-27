@@ -13,10 +13,12 @@ export const healthFormSchema = z.object({
 export type HealthFormData = z.infer<typeof healthFormSchema>;
 
 export type AnalysisResult = {
-    diseases: string[];
-    medications: {
-        suggestions: string;
-        disclaimer: string;
-    };
-    dietChart: string;
+  diseases: string[];
+  source?: 'database' | 'ai';
+  confidence?: string;
+  medications: {
+    suggestions: string;
+    disclaimer: string;
+  };
+  dietChart: string;
 };
